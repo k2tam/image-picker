@@ -7,14 +7,55 @@
 
 import Foundation
 import Photos
+import UIKit
 
-class PhotoCollectionViewModel {
+protocol PhotoPickerDelegate {
+    func didGetImg() -> Void
+    func presentSettingAlert(alert: UIAlertController) -> Void
+}
+
+enum PhotoPickerItem {
+    case takePhoto
+    case libraryPhoto(PHAsset)
+}
+
+class PhotoPickerViewModel {
     //    private var imageAssets: [PHAsset] = []
     
     var items: [PhotoPickerItem] = []
+    var delegate: PhotoPickerDelegate?
     
     
-    
+    func populatePhotos(){
+        if #available(iOS 15, *) {
+            PHPhotoLibrary.requestAuthorization(for: .readWrite) {[weak self] authStatus in
+                if(authStatus == PHAuthorizationStatus.authorized){
+                    
+                    self?.fetchAssets { [weak self] imgAssets in
+                        DispatchQueue.main.async {
+                            
+                            self?.items.append(.takePhoto)
+                            
+                            for imgAsset in imgAssets {
+                                self?.items.append(.libraryPhoto(imgAsset))
+                                
+                            }
+                            
+                            self?.delegate?.didGetImg()
+                            
+                        }
+                    }
+                }else if(authStatus == PHAuthorizationStatus.denied){
+                    DispatchQueue.main.async {
+                        self?.showSettingsAlert()
+                        
+                    }
+                }
+            }
+        }else{
+           
+        }
+    }
 
     func fetchAssets(completion: @escaping ([PHAsset]) -> Void) {
         let options = PHFetchOptions()
@@ -57,6 +98,24 @@ class PhotoCollectionViewModel {
             
         }
  
+    }
+
+    func showSettingsAlert() {
+        let alert = UIAlertController(
+            title: "Permission Required",
+            message: "Please allow access to your photos in Settings to use this feature.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        alert.addAction(UIAlertAction(title: "Settings", style: .default) { _ in
+            if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(settingsURL, options: [:], completionHandler: nil)
+            }
+        })
+        
+        
+        self.delegate?.presentSettingAlert(alert: alert)
         
     }
 }

@@ -8,19 +8,28 @@
 import UIKit
 import Photos
 // multi cell tableivew
-enum PhotoPickerItem {
-    case takePhoto
-    case libraryPhoto(PHAsset)
-}
+
 
 class ViewController: UIViewController {
-    @IBOutlet weak var collectionViewHeight: NSLayoutConstraint!
     @IBOutlet weak var imgPickerView: UIView!
     @IBOutlet weak var imgCollectionView: UICollectionView!
     @IBOutlet weak var displayImgView: UIImageView!
-    @IBOutlet weak var imgPickerViewBottomConstraint: NSLayoutConstraint!
     
-    let screenHeight = UIScreen.main.bounds.height
+    var vm: PhotoPickerViewModel?
+    var isPickerFull: Bool = false
+    
+    
+    //Constraints of imgPickerView
+    @IBOutlet weak var imgPickerViewHeightConstraint: NSLayoutConstraint!
+    
+    //Constraints for ic handle
+    @IBOutlet weak var icHandleTopConstraint: NSLayoutConstraint!
+    @IBOutlet weak var icHandleHeightConstraint: NSLayoutConstraint!
+    
+    
+    var screenHeight : CGFloat = 0.0
+    
+    
     
     let itemPerRow: CGFloat =  3.0
     let insetsSection = UIEdgeInsets(top: 16, left: 16, bottom: 0, right: 16)
@@ -28,24 +37,26 @@ class ViewController: UIViewController {
     let manager = PHImageManager.default()
     
     private var items: [PhotoPickerItem] = []
-    private let photoViewModel = PhotoCollectionViewModel()
+    private let photoViewModel = PhotoPickerViewModel()
     
-    var panGesture = UIPanGestureRecognizer()
-
-    
-    
-    var isShowImages: Bool = false {
+    var panGestureRecognizer = UIPanGestureRecognizer()
+    var isShowImages: Bool = false{
         didSet {
-            if items.isEmpty {
-                populatePhotos()
+            guard let vm = vm else {
+                return
+            }
+            
+            if (vm.items.isEmpty && isShowImages) {
+                vm.populatePhotos()
+                //                populatePhotos()
                 return
             }
             
             if(isShowImages) {
-                animateShowPicker()
-
+                performShowPicker()
+                
             }else{
-                animateDismissPicker()
+                performDismissPicker()
             }
         }
     }
@@ -53,12 +64,10 @@ class ViewController: UIViewController {
     
     var cellSize: CGSize {
         get {
-
             let insetsLeftRight = insetsSection.left + insetsSection.right
             let distanceBetweenImgs = Double(itemPerRow-1) * distanceBetweenImg
             let availableWidth = view.frame.width - Double(insetsLeftRight) - distanceBetweenImgs
             let width = availableWidth / Double(itemPerRow)
-            
             
             return CGSize(width: width, height: width)
         }
@@ -67,32 +76,104 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        screenHeight = view.frame.size.height
+        setupVM()
         setupImagePickerView()
         setUpImageCollectionView()
         
     }
     
+    private func setupVM(){
+        vm = PhotoPickerViewModel()
+        vm?.delegate = self
+    }
+    
     @IBAction func imgBtnPressed(_ sender: UIButton) {
         isShowImages = !isShowImages
-        
     }
     
     func setupImagePickerView() {
-        //Set off set for image picker view
-        imgPickerViewBottomConstraint.constant = -(0.5*screenHeight)
         
-        panGesture = UIPanGestureRecognizer(target: self, action: #selector(self.draggedView(_:)))
+        
+        imgPickerViewHeightConstraint.constant = 0
+        
+        panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(self.draggedView(_:)))
+        panGestureRecognizer.delegate = self
+        
+        imgPickerView.addGestureRecognizer(panGestureRecognizer)
+        
+        
         imgPickerView.isUserInteractionEnabled = true
-        imgPickerView.addGestureRecognizer(panGesture)
+        imgPickerView.addGestureRecognizer(panGestureRecognizer)
         
     }
+    
     
     
     @objc func draggedView(_ sender:UIPanGestureRecognizer){
         self.view.bringSubviewToFront(imgPickerView)
         let translation = sender.translation(in: self.view)
-        imgPickerView.center = CGPoint(x: imgPickerView.center.x + translation.x, y: imgPickerView.center.y + translation.y)
-        print(translation.y)
+                
+        let pointToMedium = self.screenHeight * 0.9
+        let pointToFull = self.screenHeight * 0.55
+        
+        let heightFull = self.screenHeight * 0.9
+        let heightMedium = self.screenHeight * 0.5
+        
+        
+        
+        DispatchQueue.main.async {
+            
+            
+            
+            self.imgPickerViewHeightConstraint.constant -= translation.y
+            
+            
+            if(sender.state == .ended){
+                print("Finger on")
+            }
+            
+            //Ensure imgPickerView in min height
+            if(self.imgPickerViewHeightConstraint.constant < heightMedium){
+                self.imgPickerViewHeightConstraint.constant = heightMedium
+                return
+            }
+            
+            //Ensure imgPickerView in max height
+            if(self.imgPickerViewHeightConstraint.constant > heightFull){
+                self.imgPickerViewHeightConstraint.constant = heightFull
+                return
+            }
+            
+            
+            
+            
+            if(self.imgPickerViewHeightConstraint.constant > pointToFull  && !self.isPickerFull) {
+                self.imgPickerViewHeightConstraint.constant = heightFull
+                self.isPickerFull = true
+                
+                self.smoothConstraintTraslation()
+                
+                return
+            }
+            
+            
+            if(self.imgPickerViewHeightConstraint.constant < pointToMedium && self.isPickerFull ){
+                self.imgPickerViewHeightConstraint.constant = self.screenHeight * 0.5
+                self.isPickerFull = false
+                
+                self.smoothConstraintTraslation()
+                
+                return
+                
+            }
+        }
+        
+        //        let maxY = heightFull - (heightFull * 0.75)
+        //        let minY = heightFull - (heightFull * 0.25)
+        //
+        ////        imgPickerView.center = CGPoint(x: imgPickerView.center.x, y: imgPickerView.center.y)
+        //        imgPickerView.center = CGPoint(x: imgPickerView.center.x, y: min(max(newCenterY, minY), maxY))
         
         
         sender.setTranslation(CGPoint.zero, in: self.view)
@@ -105,86 +186,43 @@ class ViewController: UIViewController {
         imgCollectionView.register(UINib(nibName: K.Cells.takePhotoCollectionViewCellNibName, bundle: nil), forCellWithReuseIdentifier: K.Cells.takePhotoCollectionViewCellID)
     }
     
-    private func populatePhotos(){
-        
-        
-        if #available(iOS 15, *) {
-            PHPhotoLibrary.requestAuthorization(for: .readWrite) {[weak self] authStatus in
-                if(authStatus == PHAuthorizationStatus.authorized){
-                    
-                    self?.photoViewModel.fetchAssets { [weak self] imgAssets in
-                        DispatchQueue.main.async {
-                            
-                            self?.items.append(.takePhoto)
-                            
-                            for imgAsset in imgAssets {
-                                self?.items.append(.libraryPhoto(imgAsset))
-                                
-                            }
-                            
-                            self?.imgCollectionView.reloadData()
-                            self?.animateShowPicker()
-                        }
-                    }
-                }else if(authStatus == PHAuthorizationStatus.denied){
-                    DispatchQueue.main.async {
-                        self?.showSettingsAlert()
-                        
-                    }
-                }
-            }
-        }else{
-           
-        }
-    }
+    
 }
-
 
 //UI Methods
 extension ViewController {
     
-    //        self.imgPickerView.constant = 350
-    //
-    //           UIView.animate(withDuration: 0.2) {
-    //               self.view.layoutIfNeeded()
-    //           }
-    
-    func animateShowPicker() {
-        self.imgPickerViewBottomConstraint.constant = 0
-        
-       UIView.animate(withDuration: 0.2) {
-           self.view.layoutIfNeeded()
-       }
-
-    }
-    
-    func animateDismissPicker() {
-        self.imgPickerViewBottomConstraint.constant = -(screenHeight*0.5)
-        
-        
-
+    func smoothConstraintTraslation() {
         UIView.animate(withDuration: 0.2) {
             self.view.layoutIfNeeded()
         }
     }
     
     
-    func showSettingsAlert() {
-        let alert = UIAlertController(
-            title: "Permission Required",
-            message: "Please allow access to your photos in Settings to use this feature.",
-            preferredStyle: .alert
-        )
+    func performShowPicker() {
+        icHandleTopConstraint.constant = 5
+        icHandleHeightConstraint.constant = 7
         
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-        alert.addAction(UIAlertAction(title: "Settings", style: .default) { _ in
-            if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.open(settingsURL, options: [:], completionHandler: nil)
-            }
-        })
         
-        present(alert, animated: true, completion: nil)
+        imgPickerViewHeightConstraint.constant = screenHeight/2
+        
+        smoothConstraintTraslation()
+        
+        
     }
+    
+    func performDismissPicker() {
+        icHandleTopConstraint.constant = 0
+        icHandleHeightConstraint.constant = 0
+        
+        imgPickerViewHeightConstraint.constant = 0
+        
+        smoothConstraintTraslation()
+        
+    }
+    
+    
+    
 }
 
 extension ViewController: UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
@@ -193,11 +231,15 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegateFl
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return self.items.count
+        return vm?.items.count ?? 0
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        switch self.items[indexPath.row] {
+        guard let item = vm?.items[indexPath.row] else {
+            return UICollectionViewCell()
+        }
+        
+        switch item {
         case .libraryPhoto(let asset):
             guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ImageCollectionViewCellId", for: indexPath) as? PhotoCollectionViewCell else {
                 fatalError("ImageCollectionViewCellId not found")
@@ -216,7 +258,7 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegateFl
             }
             
             cell.imageRequestID = imgRequestID  // Store the request ID in the cell
-
+            
             
             cell.layer.cornerRadius = 8.0
             cell.layer.masksToBounds = true
@@ -255,6 +297,26 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegateFl
     }
 }
 
+extension ViewController: UIGestureRecognizerDelegate {
+    
+}
+
+extension ViewController: PhotoPickerDelegate {
+    
+    
+    func presentSettingAlert(alert: UIAlertController) {
+        present(alert, animated: true, completion: nil)
+        
+    }
+    
+    
+    func didGetImg() {
+        
+        imgCollectionView.reloadData()
+        performShowPicker()
+    }
+}
+
 
 extension ViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
@@ -274,7 +336,7 @@ extension ViewController: UICollectionViewDelegate {
                 }
             }
             
-            animateDismissPicker()
+            performDismissPicker()
             
             return
         }
@@ -288,10 +350,8 @@ extension ViewController: UINavigationControllerDelegate, UIImagePickerControlle
     }
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        
-        
         picker.dismiss(animated: true)
-        animateDismissPicker()
+        performDismissPicker()
         
         guard let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage else{
             return
@@ -300,4 +360,6 @@ extension ViewController: UINavigationControllerDelegate, UIImagePickerControlle
         displayImgView.image = image
     }
 }
+
+
 

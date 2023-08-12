@@ -21,7 +21,7 @@
                                 <rect key="frame" x="0.0" y="78.999999999999986" width="393" height="255.66666666666663"/>
                             </imageView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fcO-U8-D8h" customClass="UIImageView">
-                                <rect key="frame" x="0.0" y="406" width="393" height="426"/>
+                                <rect key="frame" x="0.0" y="486" width="393" height="366"/>
                                 <subviews>
                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ic_handle_bar" translatesAutoresizingMaskIntoConstraints="NO" id="9L1-q4-AAZ">
                                         <rect key="frame" x="178.66666666666666" y="7" width="36" height="5"/>
@@ -31,8 +31,11 @@
                                         </constraints>
                                     </imageView>
                                     <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="9Eg-tz-FRh">
-                                        <rect key="frame" x="0.0" y="24" width="393" height="402"/>
+                                        <rect key="frame" x="0.0" y="16" width="393" height="350"/>
                                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="350" id="h9k-Ub-TWU"/>
+                                        </constraints>
                                         <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="3fD-ht-B4D">
                                             <size key="itemSize" width="128" height="128"/>
                                             <size key="headerReferenceSize" width="0.0" height="0.0"/>
@@ -64,9 +67,9 @@
                                 <constraints>
                                     <constraint firstAttribute="bottom" secondItem="9Eg-tz-FRh" secondAttribute="bottom" id="E6s-Pf-GWS"/>
                                     <constraint firstItem="9Eg-tz-FRh" firstAttribute="leading" secondItem="fcO-U8-D8h" secondAttribute="leading" id="V90-Lo-Ce4"/>
+                                    <constraint firstItem="9Eg-tz-FRh" firstAttribute="top" secondItem="9L1-q4-AAZ" secondAttribute="bottom" constant="4" id="eMK-9Q-pLF"/>
                                     <constraint firstItem="9L1-q4-AAZ" firstAttribute="top" secondItem="fcO-U8-D8h" secondAttribute="top" constant="7" id="gCw-W5-4sz"/>
                                     <constraint firstAttribute="trailing" secondItem="9Eg-tz-FRh" secondAttribute="trailing" id="o9C-ow-GtT"/>
-                                    <constraint firstItem="9Eg-tz-FRh" firstAttribute="top" secondItem="fcO-U8-D8h" secondAttribute="top" constant="24" id="r51-IZ-Y5i"/>
                                     <constraint firstItem="9L1-q4-AAZ" firstAttribute="centerX" secondItem="fcO-U8-D8h" secondAttribute="centerX" id="u6E-97-Sye"/>
                                 </constraints>
                             </view>
@@ -85,10 +88,9 @@
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
-                            <constraint firstItem="fcO-U8-D8h" firstAttribute="height" secondItem="8bC-Xf-vdC" secondAttribute="height" multiplier="0.5" id="6Ss-bF-mVi"/>
-                            <constraint firstAttribute="bottom" secondItem="fcO-U8-D8h" secondAttribute="bottom" constant="20" symbolic="YES" id="QjQ-ye-xJw"/>
                             <constraint firstAttribute="trailing" secondItem="fcO-U8-D8h" secondAttribute="trailing" id="R0s-cS-CDL"/>
                             <constraint firstItem="8WB-PR-LNP" firstAttribute="top" secondItem="v2H-n9-tWk" secondAttribute="bottom" constant="10" id="Xim-mJ-yIf"/>
+                            <constraint firstAttribute="bottom" secondItem="fcO-U8-D8h" secondAttribute="bottom" id="aS9-Sj-eBw"/>
                             <constraint firstItem="v2H-n9-tWk" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="beO-rB-GVc"/>
                             <constraint firstItem="fcO-U8-D8h" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="mcF-SJ-Zsg"/>
                             <constraint firstItem="v2H-n9-tWk" firstAttribute="height" secondItem="8bC-Xf-vdC" secondAttribute="height" multiplier="0.3" id="sTU-1G-Ytq"/>
@@ -98,11 +100,12 @@
                         </constraints>
                     </view>
                     <connections>
-                        <outlet property="collectionViewHeight" destination="9Eg-tz-FRh" id="FUP-jV-9yL"/>
                         <outlet property="displayImgView" destination="v2H-n9-tWk" id="Crw-ky-rGC"/>
+                        <outlet property="icHandleHeightConstraint" destination="5q6-Lo-gt0" id="MfU-Bm-cn3"/>
+                        <outlet property="icHandleTopConstraint" destination="gCw-W5-4sz" id="zry-Kb-7ej"/>
                         <outlet property="imgCollectionView" destination="9Eg-tz-FRh" id="mh8-s4-b2U"/>
                         <outlet property="imgPickerView" destination="fcO-U8-D8h" id="vLe-fC-4uc"/>
-                        <outlet property="imgPickerViewBottomConstraint" destination="QjQ-ye-xJw" id="ta1-pJ-6vC"/>
+                        <outlet property="imgPickerViewHeightConstraint" destination="h9k-Ub-TWU" id="MOE-cl-Suw"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
