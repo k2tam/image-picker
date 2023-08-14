@@ -16,7 +16,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var displayImgView: UIImageView!
     
     var vm: PhotoPickerViewModel?
-    var isPickerFull: Bool = false
+    private var isPickerFull: Bool = false
     
     
     //Constraints of imgPickerView
@@ -28,9 +28,6 @@ class ViewController: UIViewController {
     
     
     var screenHeight : CGFloat = 0.0
-    
-    
-    
     let itemPerRow: CGFloat =  3.0
     let insetsSection = UIEdgeInsets(top: 16, left: 16, bottom: 0, right: 16)
     let distanceBetweenImg: CGFloat = 8.68
@@ -39,8 +36,9 @@ class ViewController: UIViewController {
     private var items: [PhotoPickerItem] = []
     private let photoViewModel = PhotoPickerViewModel()
     
+    
     var panGestureRecognizer = UIPanGestureRecognizer()
-    var isShowImages: Bool = false{
+    private var isShowImages: Bool = false{
         didSet {
             guard let vm = vm else {
                 return
@@ -62,7 +60,7 @@ class ViewController: UIViewController {
     }
     
     
-    var cellSize: CGSize {
+    private var cellSize: CGSize {
         get {
             let insetsLeftRight = insetsSection.left + insetsSection.right
             let distanceBetweenImgs = Double(itemPerRow-1) * distanceBetweenImg
@@ -92,7 +90,7 @@ class ViewController: UIViewController {
         isShowImages = !isShowImages
     }
     
-    func setupImagePickerView() {
+    private func setupImagePickerView() {
         
         
         imgPickerViewHeightConstraint.constant = 0
@@ -123,9 +121,6 @@ class ViewController: UIViewController {
         
         
         DispatchQueue.main.async {
-            
-            
-            
             self.imgPickerViewHeightConstraint.constant -= translation.y
             
             
@@ -144,9 +139,7 @@ class ViewController: UIViewController {
                 self.imgPickerViewHeightConstraint.constant = heightFull
                 return
             }
-            
-            
-            
+ 
             
             if(self.imgPickerViewHeightConstraint.constant > pointToFull  && !self.isPickerFull) {
                 self.imgPickerViewHeightConstraint.constant = heightFull
@@ -169,17 +162,11 @@ class ViewController: UIViewController {
             }
         }
         
-        //        let maxY = heightFull - (heightFull * 0.75)
-        //        let minY = heightFull - (heightFull * 0.25)
-        //
-        ////        imgPickerView.center = CGPoint(x: imgPickerView.center.x, y: imgPickerView.center.y)
-        //        imgPickerView.center = CGPoint(x: imgPickerView.center.x, y: min(max(newCenterY, minY), maxY))
-        
         
         sender.setTranslation(CGPoint.zero, in: self.view)
     }
     
-    func setUpImageCollectionView() {
+    private func setUpImageCollectionView() {
         imgCollectionView.delegate = self
         imgCollectionView.dataSource = self
         
@@ -320,7 +307,11 @@ extension ViewController: PhotoPickerDelegate {
 
 extension ViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        switch self.items[indexPath.row] {
+        guard let item = vm?.items[indexPath.row] else {
+            return
+        }
+        
+        switch item {
         case .takePhoto:
             let picker = UIImagePickerController()
             picker.sourceType = .camera

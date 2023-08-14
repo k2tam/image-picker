@@ -19,12 +19,21 @@ enum PhotoPickerItem {
     case libraryPhoto(PHAsset)
 }
 
-class PhotoPickerViewModel {
+class PhotoPickerViewModel: NSObject, PHPhotoLibraryChangeObserver {
     //    private var imageAssets: [PHAsset] = []
     
     var items: [PhotoPickerItem] = []
     var delegate: PhotoPickerDelegate?
     
+    
+    override init() {
+        super.init()
+        PHPhotoLibrary.shared().register(self)
+    }
+    
+    deinit {
+        PHPhotoLibrary.shared().unregisterChangeObserver(self)
+    }
     
     func populatePhotos(){
         if #available(iOS 15, *) {
@@ -53,10 +62,10 @@ class PhotoPickerViewModel {
                 }
             }
         }else{
-           
+            
         }
     }
-
+    
     func fetchAssets(completion: @escaping ([PHAsset]) -> Void) {
         let options = PHFetchOptions()
         options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
@@ -87,7 +96,7 @@ class PhotoPickerViewModel {
                     let asset = fetchResult.object(at: index)
                     assets.append(asset)
                 }
-
+                
                 
                 // Update fetchIndex for the next batch
                 fetchIndex = endIndex
@@ -97,9 +106,29 @@ class PhotoPickerViewModel {
             completion(assets)
             
         }
- 
+        
     }
-
+    
+    
+    // Fetch assets again when photo lybrary did change
+    func photoLibraryDidChange(_ changeInstance: PHChange) {
+        // Handle photo library changes here
+        // You can call your existing fetchAssets method to update items
+        // Reload your collection view or update UI accordingly
+        fetchAssets { [weak self] imgAssets in
+            DispatchQueue.main.async {
+                self?.items.removeAll()
+                self?.items.append(.takePhoto)
+                
+                for imgAsset in imgAssets {
+                    self?.items.append(.libraryPhoto(imgAsset))
+                }
+                
+                self?.delegate?.didGetImg()
+            }
+        }
+    }
+    
     func showSettingsAlert() {
         let alert = UIAlertController(
             title: "Permission Required",
@@ -119,3 +148,4 @@ class PhotoPickerViewModel {
         
     }
 }
+
