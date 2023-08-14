@@ -16,8 +16,11 @@ class PhotoCollectionViewCell: UICollectionViewCell {
 
     
     
-    override class func awakeFromNib() {
+    override func awakeFromNib() {
         super.awakeFromNib()
+        self.layer.cornerRadius = 8
+        self.layer.masksToBounds = true
+
     }
     
     

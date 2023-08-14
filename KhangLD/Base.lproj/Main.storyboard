@@ -85,24 +85,31 @@
                                 </connections>
                             </button>
                             <stackView opaque="NO" contentMode="scaleToFill" spacing="22" translatesAutoresizingMaskIntoConstraints="NO" id="SVX-3h-Dfj" userLabel="Button Stack View">
-                                <rect key="frame" x="20" y="818" width="353" height="0.0"/>
+                                <rect key="frame" x="20" y="808" width="353" height="0.0"/>
                                 <subviews>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="2rK-mq-LUg">
                                         <rect key="frame" x="0.0" y="0.0" width="165.66666666666666" height="0.0"/>
                                         <color key="backgroundColor" systemColor="systemRedColor"/>
                                         <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
-                                        <state key="normal" title="Button"/>
+                                        <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                        <state key="normal" title="Edit"/>
                                         <buttonConfiguration key="configuration" style="plain" title="Edit"/>
+                                        <connections>
+                                            <action selector="imgEditSendPressed:" destination="BYZ-38-t0r" eventType="touchUpInside" id="kQT-NQ-pPB"/>
+                                        </connections>
                                     </button>
-                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="w9C-jn-3Hf">
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="w9C-jn-3Hf">
                                         <rect key="frame" x="187.66666666666663" y="0.0" width="165.33333333333337" height="0.0"/>
                                         <color key="backgroundColor" systemColor="systemPurpleColor"/>
                                         <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
-                                        <state key="normal" title="Button"/>
+                                        <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                        <state key="normal" title="Send"/>
                                         <buttonConfiguration key="configuration" style="plain" title="Send"/>
+                                        <connections>
+                                            <action selector="imgEditSendPressed:" destination="BYZ-38-t0r" eventType="touchUpInside" id="VZM-or-pcA"/>
+                                        </connections>
                                     </button>
                                 </subviews>
-                                <color key="backgroundColor" systemColor="systemBrownColor"/>
                                 <constraints>
                                     <constraint firstAttribute="height" id="GN0-cm-s8D"/>
                                 </constraints>
@@ -119,19 +126,23 @@
                             <constraint firstItem="v2H-n9-tWk" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="beO-rB-GVc"/>
                             <constraint firstItem="fcO-U8-D8h" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="mcF-SJ-Zsg"/>
                             <constraint firstItem="v2H-n9-tWk" firstAttribute="height" secondItem="8bC-Xf-vdC" secondAttribute="height" multiplier="0.3" id="sTU-1G-Ytq"/>
-                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="SVX-3h-Dfj" secondAttribute="bottom" id="ubI-zr-sQF"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="SVX-3h-Dfj" secondAttribute="bottom" constant="10" id="ubI-zr-sQF"/>
                             <constraint firstItem="v2H-n9-tWk" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="20" id="wIl-Jg-ZTf"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="v2H-n9-tWk" secondAttribute="trailing" id="xob-u1-voD"/>
                             <constraint firstItem="8WB-PR-LNP" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="zs1-ty-me2"/>
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="buttonStackHeightConstraint" destination="GN0-cm-s8D" id="buG-oS-XOS"/>
                         <outlet property="displayImgView" destination="v2H-n9-tWk" id="Crw-ky-rGC"/>
+                        <outlet property="editButton" destination="2rK-mq-LUg" id="zTK-Ip-K5F"/>
                         <outlet property="icHandleHeightConstraint" destination="5q6-Lo-gt0" id="MfU-Bm-cn3"/>
                         <outlet property="icHandleTopConstraint" destination="gCw-W5-4sz" id="zry-Kb-7ej"/>
+                        <outlet property="imgButtonsStackView" destination="SVX-3h-Dfj" id="e2u-1s-j9T"/>
                         <outlet property="imgCollectionView" destination="9Eg-tz-FRh" id="mh8-s4-b2U"/>
                         <outlet property="imgPickerView" destination="fcO-U8-D8h" id="vLe-fC-4uc"/>
                         <outlet property="imgPickerViewHeightConstraint" destination="h9k-Ub-TWU" id="MOE-cl-Suw"/>
+                        <outlet property="sendButton" destination="w9C-jn-3Hf" id="JHk-wy-aJf"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
@@ -143,9 +154,6 @@
         <image name="ic_handle_bar" width="36" height="6"/>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-        </systemColor>
-        <systemColor name="systemBrownColor">
-            <color red="0.63529411764705879" green="0.51764705882352946" blue="0.36862745098039218" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemPurpleColor">
             <color red="0.68627450980392157" green="0.32156862745098042" blue="0.87058823529411766" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>

@@ -9,9 +9,11 @@ import Foundation
 import Photos
 import UIKit
 
-protocol PhotoPickerDelegate {
-    func didGetImg() -> Void
-    func presentSettingAlert(alert: UIAlertController) -> Void
+protocol PhotoPickerModelDelegate {
+    func didGetImg()
+    func presentSettingAlert(alert: UIAlertController)
+    func assetsSelectedIdsDidChange()
+    
 }
 
 enum PhotoPickerItem {
@@ -23,7 +25,12 @@ class PhotoPickerViewModel: NSObject, PHPhotoLibraryChangeObserver {
     //    private var imageAssets: [PHAsset] = []
     
     var items: [PhotoPickerItem] = []
-    var delegate: PhotoPickerDelegate?
+    var assestSelectedIds: [String] = [] {
+        didSet {
+            delegate?.assetsSelectedIdsDidChange()
+        }
+    }
+    var delegate: PhotoPickerModelDelegate?
     
     
     override init() {
@@ -147,5 +154,16 @@ class PhotoPickerViewModel: NSObject, PHPhotoLibraryChangeObserver {
         self.delegate?.presentSettingAlert(alert: alert)
         
     }
+    
+    
+    func toggleAssetSelection(asset: PHAsset) {
+            if let index = assestSelectedIds.firstIndex(of: asset.localIdentifier) {
+                // The asset is already selected, so remove it
+                assestSelectedIds.remove(at: index)
+            } else {
+                // The asset is not selected, so add it
+                assestSelectedIds.append(asset.localIdentifier)
+            }
+        }
 }
 
