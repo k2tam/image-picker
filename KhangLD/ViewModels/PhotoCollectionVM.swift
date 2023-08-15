@@ -12,7 +12,8 @@ import UIKit
 protocol PhotoPickerModelDelegate {
     func didGetImg()
     func presentSettingAlert(alert: UIAlertController)
-    func assetsSelectedIdsDidChange()
+    func assetsSelectedDidChange()
+    func unselectSelectedAsset(cellIndex: Int)
     
 }
 
@@ -21,15 +22,21 @@ enum PhotoPickerItem {
     case libraryPhoto(PHAsset)
 }
 
+struct selectedAsset {
+    let cellIndex: Int
+    let imgLocalId: String
+}
+
 class PhotoPickerViewModel: NSObject, PHPhotoLibraryChangeObserver {
-    //    private var imageAssets: [PHAsset] = []
     
     var items: [PhotoPickerItem] = []
-    var assestSelectedIds: [String] = [] {
+        
+    var assetsSelected: [selectedAsset] = [] {
         didSet {
-            delegate?.assetsSelectedIdsDidChange()
+            delegate?.assetsSelectedDidChange()
         }
     }
+    
     var delegate: PhotoPickerModelDelegate?
     
     
@@ -120,8 +127,7 @@ class PhotoPickerViewModel: NSObject, PHPhotoLibraryChangeObserver {
     // Fetch assets again when photo lybrary did change
     func photoLibraryDidChange(_ changeInstance: PHChange) {
         // Handle photo library changes here
-        // You can call your existing fetchAssets method to update items
-        // Reload your collection view or update UI accordingly
+
         fetchAssets { [weak self] imgAssets in
             DispatchQueue.main.async {
                 self?.items.removeAll()
@@ -149,21 +155,39 @@ class PhotoPickerViewModel: NSObject, PHPhotoLibraryChangeObserver {
                 UIApplication.shared.open(settingsURL, options: [:], completionHandler: nil)
             }
         })
-        
-        
+
         self.delegate?.presentSettingAlert(alert: alert)
         
     }
     
     
-    func toggleAssetSelection(asset: PHAsset) {
-            if let index = assestSelectedIds.firstIndex(of: asset.localIdentifier) {
-                // The asset is already selected, so remove it
-                assestSelectedIds.remove(at: index)
-            } else {
-                // The asset is not selected, so add it
-                assestSelectedIds.append(asset.localIdentifier)
-            }
+    func toggleAssetSelection(indexCellSelected: Int,asset: PHAsset, completion: @escaping ()-> Void ) {
+        
+        //Index in assetsSelected
+        if let firstIndexOfCellInAssetsSelectedArray = findFirstIndexOfCellInAssetsSelectedArray(indexCellSelected: indexCellSelected){
+            //Unselect the asset
+            assetsSelected.remove(at: firstIndexOfCellInAssetsSelectedArray)
+            delegate?.unselectSelectedAsset(cellIndex: indexCellSelected)
+            
+        }else{
+            assetsSelected.append(selectedAsset(cellIndex: indexCellSelected, imgLocalId: asset.localIdentifier))
         }
+        
+        print(assetsSelected)
+        
+        completion()
+        
+    }
+    
+    
+    func findFirstIndexOfCellInAssetsSelectedArray(indexCellSelected: Int) -> Int? {
+         return  assetsSelected.firstIndex { assetSelected in
+             assetSelected.cellIndex == indexCellSelected
+        }
+        
+    }
+    
+    
+    
 }
 

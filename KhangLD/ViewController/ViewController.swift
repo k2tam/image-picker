@@ -17,7 +17,6 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var imgButtonsStackView: UIStackView!
     
-    
     @IBOutlet weak var editButton: UIButton!
     @IBOutlet weak var sendButton: UIButton!
     
@@ -30,6 +29,7 @@ class ViewController: UIViewController {
     
     //Constraints for stack of edit and send buttons
     @IBOutlet weak var buttonStackHeightConstraint: NSLayoutConstraint!
+    
     
     var vm: PhotoPickerViewModel?
     
@@ -56,7 +56,6 @@ class ViewController: UIViewController {
             
             if (vm.items.isEmpty && isShowImages) {
                 vm.populatePhotos()
-                //                populatePhotos()
                 return
             }
             
@@ -84,7 +83,6 @@ class ViewController: UIViewController {
     let distanceBetweenImg: CGFloat = 8.68
     let manager = PHImageManager.default()
     
-    private var items: [PhotoPickerItem] = []
     private let photoViewModel = PhotoPickerViewModel()
     
     var panGestureRecognizer = UIPanGestureRecognizer()
@@ -104,11 +102,12 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         screenHeight = view.frame.size.height
+        setupEditSendButtons()
         setupVM()
         setupImagePickerView()
-        setUpImageCollectionView()
-        
+        setupImageCollectionView()
     }
+    
     
     private func setupVM(){
         vm = PhotoPickerViewModel()
@@ -117,8 +116,6 @@ class ViewController: UIViewController {
     
     @IBAction func imgBtnPressed(_ sender: UIButton) {
         isShowImages = !isShowImages
-        
-        
     }
     
     private func setupImagePickerView() {
@@ -138,18 +135,24 @@ class ViewController: UIViewController {
     }
     
     
-    private func setUpImageCollectionView() {
+    private func setupImageCollectionView() {
         imgCollectionView.delegate = self
         imgCollectionView.dataSource = self
         
         imgCollectionView.register(UINib(nibName: K.Cells.takePhotoCollectionViewCellNibName, bundle: nil), forCellWithReuseIdentifier: K.Cells.takePhotoCollectionViewCellID)
     }
-    
-    
 }
 
-//UI Methods
+//MARK: - UI Methods
 extension ViewController {
+    
+    func setupEditSendButtons() {
+        editButton.layer.cornerRadius =  8
+        editButton.clipsToBounds = true
+        
+        sendButton.layer.cornerRadius = 8
+        sendButton.clipsToBounds = true
+    }
     
     func smoothConstraintTraslation() {
         UIView.animate(withDuration: 0.2) {
@@ -157,11 +160,9 @@ extension ViewController {
         }
     }
     
-    
     func performShowPicker() {
         icHandleTopConstraint.constant = 5
         icHandleHeightConstraint.constant = 7
-        
         
         imgPickerViewHeightConstraint.constant = screenHeight/2
         
@@ -171,8 +172,21 @@ extension ViewController {
     }
     
     func performDismissPicker() {
-        vm?.assestSelectedIds = []
-
+        
+        guard let vm = self.vm else {
+            print("No vm")
+            return
+        }
+        
+        //Remove all index label
+        for assetSelected in vm.assetsSelected {
+            if let cellSelected = imgCollectionView.cellForItem(at: IndexPath(row: assetSelected.cellIndex, section: 0)) as? PhotoCollectionViewCell {
+                cellSelected.indexLabel = nil
+            }
+        }
+        
+        vm.assetsSelected = []
+        
         
         icHandleTopConstraint.constant = 0
         icHandleHeightConstraint.constant = 0
@@ -199,7 +213,7 @@ extension ViewController {
         
         DispatchQueue.main.async {
             self.imgPickerViewHeightConstraint.constant -= translation.y
-
+            
             //Ensure imgPickerView in min height
             if(self.imgPickerViewHeightConstraint.constant < heightMedium){
                 self.imgPickerViewHeightConstraint.constant = heightMedium
@@ -233,11 +247,9 @@ extension ViewController {
                 
             }
         }
-        
-        
         sender.setTranslation(CGPoint.zero, in: self.view)
     }
-
+    
 }
 
 extension ViewController: UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
@@ -271,9 +283,8 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegateFl
                     
                 }
             }
-            
+
             cell.imageRequestID = imgRequestID  // Store the request ID in the cell
-            
             
             return cell
         case .takePhoto:
@@ -308,6 +319,7 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegateFl
 }
 
 extension ViewController: UICollectionViewDelegate {
+    
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         guard let item = vm?.items[indexPath.row] else {
             return
@@ -323,28 +335,39 @@ extension ViewController: UICollectionViewDelegate {
         case .libraryPhoto(let asset):
             isSelectedImg = true
             
-//            //Get local asset id of images selected
-//            vm!.assestSelectedIds.append(asset.localIdentifier)
             
-            vm?.toggleAssetSelection(asset: asset) // Toggle asset selection
+            guard let currentCell = collectionView.cellForItem(at: indexPath) as? PhotoCollectionViewCell else {
+                print("Current cell is nil")
+                return
+            }
             
+            guard let vm = self.vm else {
+                print("")
+                return
+            }
             
-            print(vm!.assestSelectedIds)
-            
-
-
-
-
-            //            manager.requestImage(for: asset, targetSize: CGSize(width: displayImgView.frame.width , height: displayImgView.frame.height), contentMode: .aspectFill, options: nil) { [weak self] image, _ in
-            //                DispatchQueue.main.async {
-            //
-            //
-            ////                    self?.displayImgView.image = image
-            //                }
-            //            }
-            
-            //            performDismissPicker()
-            
+            vm.toggleAssetSelection(indexCellSelected: indexPath.row, asset: asset, completion: {
+                //cells to reload the label
+                for cellToReload in vm.assetsSelected {
+                    if let cell = collectionView.cellForItem(at: IndexPath(row: cellToReload.cellIndex, section: 0)) as? PhotoCollectionViewCell{
+                        
+                        //find first index of cellToReload in assetsSelected array
+                        
+                        
+                        if let indexLabel = vm.assetsSelected.firstIndex(where: { assetSelected in
+                            assetSelected.cellIndex == cellToReload.cellIndex
+                        }){
+                            cell.indexLabel = indexLabel
+                            
+                        }
+                        
+                        
+                    }else{
+                        fatalError("Not found cell with index \(indexPath.row)")
+                    }
+                }
+            })
+             
             return
         }
         
@@ -356,13 +379,25 @@ extension ViewController: UIGestureRecognizerDelegate {
 }
 
 extension ViewController: PhotoPickerModelDelegate {
-
-    func assetsSelectedIdsDidChange() {
+    
+    func unselectSelectedAsset(cellIndex: Int) {
+        if let cell = imgCollectionView.cellForItem(at: IndexPath(row: cellIndex, section: 0)) as? PhotoCollectionViewCell{
+            cell.indexLabel = nil
+        }else {
+            fatalError("Not found cell to unselect")
+        }
+    }
+    
+    
+    func assetsSelectedDidChange() {
         guard let vm = vm else {
             fatalError("VM is nil")
         }
         
-        let numOfSelectedIds = vm.assestSelectedIds.count
+        let numOfSelectedIds = vm.assetsSelected.count
+        
+        
+        
         //Show or Hide edit button base on images selected
         if(numOfSelectedIds > 1){
             editButton.isHidden = true
@@ -380,7 +415,6 @@ extension ViewController: PhotoPickerModelDelegate {
         present(alert, animated: true, completion: nil)
         
     }
-    
     
     func didGetImg() {
         imgCollectionView.reloadData()
@@ -406,8 +440,3 @@ extension ViewController: UINavigationControllerDelegate, UIImagePickerControlle
         displayImgView.image = image
     }
 }
-
-
-
-
-
